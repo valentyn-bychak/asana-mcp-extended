@@ -129,6 +129,7 @@ export const deleteCustomField = defineTool({
   },
 });
 
+// (update_custom_field / update_enum_option / reorder_enum_option defined below)
 export const addEnumOption = defineTool({
   name: "add_enum_option",
   description: "Add a new option to an existing enum/multi_enum custom field.",
@@ -152,6 +153,65 @@ export const addEnumOption = defineTool({
     ),
 });
 
+export const updateCustomField = defineTool({
+  name: "update_custom_field",
+  description: "Update a custom field's metadata (name, description, number precision).",
+  schema: z
+    .object({
+      custom_field_id: z.string(),
+      name: z.string().optional(),
+      description: z.string().optional(),
+      precision: z.number().int().min(0).max(6).optional().describe("decimals for number fields"),
+    })
+    .refine((v) => Object.keys(v).length > 1, { message: "Provide at least one field to update" }),
+  handler: (client, input) => {
+    const { custom_field_id, ...rest } = input;
+    return client.request("PUT", `/custom_fields/${custom_field_id}`, compactCF(rest));
+  },
+});
+
+export const updateEnumOption = defineTool({
+  name: "update_enum_option",
+  description: "Rename, recolor, or enable/disable an enum option.",
+  schema: z
+    .object({
+      enum_option_id: z.string().describe("gid of the enum option"),
+      name: z.string().optional(),
+      color: z.string().optional(),
+      enabled: z.boolean().optional().describe("set false to retire the option without deleting it"),
+    })
+    .refine((v) => Object.keys(v).length > 1, { message: "Provide at least one field to update" }),
+  handler: (client, input) => {
+    const { enum_option_id, ...rest } = input;
+    return client.request("PUT", `/enum_options/${enum_option_id}`, compactCF(rest));
+  },
+});
+
+export const reorderEnumOption = defineTool({
+  name: "reorder_enum_option",
+  description: "Move an enum option to a new position within its custom field.",
+  schema: z
+    .object({
+      custom_field_id: z.string(),
+      enum_option_id: z.string().describe("gid of the option to move"),
+      before_enum_option: z.string().optional(),
+      after_enum_option: z.string().optional(),
+    })
+    .refine((v) => !!v.before_enum_option !== !!v.after_enum_option, {
+      message: "Provide exactly one of before_enum_option or after_enum_option",
+    }),
+  handler: (client, input) =>
+    client.request(
+      "POST",
+      `/custom_fields/${input.custom_field_id}/enum_options/insert`,
+      compactCF({
+        enum_option: input.enum_option_id,
+        before_enum_option: input.before_enum_option,
+        after_enum_option: input.after_enum_option,
+      }),
+    ),
+});
+
 function compactCF(obj: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
@@ -163,4 +223,7 @@ export const customFieldTools = [
   createCustomField,
   deleteCustomField,
   addEnumOption,
+  updateCustomField,
+  updateEnumOption,
+  reorderEnumOption,
 ];

@@ -8,9 +8,9 @@ manage members. This server adds those — the write-heavy half of a full projec
 Built from scratch in TypeScript on the official [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk),
 talking directly to the [Asana REST API](https://developers.asana.com/reference). MIT licensed.
 
-> Status: **51 tools** covering the full TZ scope (attachments, sections, projects, time tracking,
-> custom fields, templates, recurrence, tags, comments, portfolios, subtasks/dependencies, goals,
-> task templates, user/overdue reports). Webhooks are intentionally excluded — see below.
+> Status: **58 tools** covering the full TZ scope plus stand-up/weekly reports, My Tasks sections,
+> and full custom-field editing. Webhooks and reporting-dashboard creation are intentionally
+> excluded (Asana API limitations) — see below.
 
 ## Tools
 
@@ -104,12 +104,15 @@ talking directly to the [Asana REST API](https://developers.asana.com/reference)
 | `add_followers_to_project` | Add follower users to a project. |
 | `sort_section_tasks_by_due_date` | Reorder a section's tasks by due date (asc/desc, nulls top/bottom). |
 
-### Custom fields (creation)
+### Custom fields (creation & editing)
 | Tool | What it does |
 |------|--------------|
 | `create_custom_field` | Create a workspace custom field (text/number/enum/multi_enum/date/people). |
+| `update_custom_field` | Update a field's name/description/precision. |
 | `delete_custom_field` | Delete a workspace custom field (irreversible). |
 | `add_enum_option` | Add an option to an enum/multi_enum field. |
+| `update_enum_option` | Rename/recolor/enable-disable an enum option. |
+| `reorder_enum_option` | Move an enum option's position. |
 
 ### Portfolios
 | Tool | What it does |
@@ -136,11 +139,25 @@ talking directly to the [Asana REST API](https://developers.asana.com/reference)
 |------|--------------|
 | `get_tasks_for_user` | A user's incomplete assigned tasks (`me` or gid). |
 | `overdue_tasks_for_user` | A user's past-due incomplete tasks. |
+| `standup_report` | Daily report: completed yesterday + due today, as ready-to-send markdown. |
+| `weekly_report` | Last-7-days completed + still-open overdue, as ready-to-send markdown. |
 
-### Not included: webhooks
-Webhooks require a public HTTPS endpoint to *receive* event callbacks. A local stdio MCP server
-has no such endpoint, so webhook tools would not function in this deployment and are omitted. (If
-ever deployed as a hosted HTTP server with a public URL, they could be added.)
+The report tools use Asana's premium task search (`/workspaces/{ws}/tasks/search`, Advanced plan)
+and return both structured data and a formatted `markdown` string to paste into Slack/email —
+replacing the manual "filter + screenshot" workflow.
+
+### My Tasks
+| Tool | What it does |
+|------|--------------|
+| `get_my_tasks_sections` | List a user's My Tasks sections (gid + name). |
+| `move_to_my_tasks_section` | Move a task into a My Tasks section (optionally (re)assign first). |
+
+### Not included: webhooks & reporting dashboards
+- **Webhooks** require a public HTTPS endpoint to *receive* event callbacks; a local stdio server
+  has none, so they're omitted (could be added if deployed as a hosted HTTP server).
+- **Reporting dashboards / charts** cannot be created via the Asana API — there is no public
+  endpoint for it (a long-standing gap). The `standup_report` / `weekly_report` tools cover the
+  practical reporting need instead (generated summaries rather than in-app dashboard charts).
 
 ## Usage examples
 

@@ -39,9 +39,9 @@ afterEach(() => vi.unstubAllGlobals());
 // --- registry --------------------------------------------------------------
 
 describe("registry", () => {
-  it("exposes 51 tools with unique names", () => {
-    expect(tools.length).toBe(51);
-    expect(new Set(tools.map((t) => t.name)).size).toBe(51);
+  it("exposes 58 tools with unique names", () => {
+    expect(tools.length).toBe(58);
+    expect(new Set(tools.map((t) => t.name)).size).toBe(58);
   });
 
   it("every tool has a non-trivial description", () => {

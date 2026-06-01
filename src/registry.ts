@@ -14,6 +14,8 @@ import { projectExtraTools } from "./tools/project_extras.js";
 import { taskTemplateTools } from "./tools/task_templates.js";
 import { goalTools } from "./tools/goals.js";
 import { userTools } from "./tools/users.js";
+import { reportTools } from "./tools/reports.js";
+import { myTasksTools } from "./tools/my_tasks.js";
 
 /** All tools exposed by the server. */
 export const tools: ToolDef<any>[] = [
@@ -32,6 +34,8 @@ export const tools: ToolDef<any>[] = [
   ...taskTemplateTools,
   ...goalTools,
   ...userTools,
+  ...reportTools,
+  ...myTasksTools,
 ];
 
 export const toolsByName = new Map(tools.map((t) => [t.name, t]));
