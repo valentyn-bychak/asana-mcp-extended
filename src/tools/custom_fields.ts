@@ -45,7 +45,10 @@ export const addCustomFieldToProject = defineTool({
   description:
     "Attach an existing workspace custom field to a project so its column appears in the UI " +
     "and values can be set on the project's tasks. Use for adding e.g. 'Estimated time' to a " +
-    "freshly created project.",
+    "freshly created project. NOTE: this works for custom fields only — Asana's NATIVE time-" +
+    "tracking 'Actual time' field cannot be attached via the API (Asana limitation); add it in " +
+    "the project's Customize menu in the UI. Actual-time values written via add_time_tracking_" +
+    "entry are still stored and will appear once that column is added.",
   schema: z.object({
     project_id: z.string().describe("gid of the project"),
     custom_field_id: z.string().describe("gid of the workspace custom field to attach"),

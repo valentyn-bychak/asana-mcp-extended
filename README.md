@@ -43,10 +43,13 @@ talking directly to the [Asana REST API](https://developers.asana.com/reference)
 | `update_time_tracking_entry` | Edit an entry's duration/date. |
 | `delete_time_tracking_entry` | Delete an entry. |
 
-> **Estimated time / custom time fields.** Asana's *native* Estimated time is not writable via the
-> public API. Many workspaces instead track Estimated/Spent time as **number custom fields**. Set
-> their values via the standard task `custom_fields` API; attach the fields to a project with the
-> tools below (a freshly created project does not carry them automatically).
+> **Time tracking vs. custom time fields.** Actual time is Asana's *native* time-tracking field —
+> write it with `add_time_tracking_entry` (populates `task.actual_time_minutes`). The native
+> **Actual time** and **Estimated time** columns can NOT be attached to a project via the API
+> (Asana limitation — no gid; add them in the project's Customize menu in the UI). Logged
+> actual-time values are still stored and appear once that column is added. Some workspaces also
+> use plain **number custom fields** for estimates — those you can attach with the tools below and
+> set via the standard task `custom_fields` API.
 
 ### Custom fields
 | Tool | What it does |
