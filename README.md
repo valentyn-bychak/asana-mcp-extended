@@ -8,8 +8,8 @@ manage members. This server adds those — the write-heavy half of a full projec
 Built from scratch in TypeScript on the official [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk),
 talking directly to the [Asana REST API](https://developers.asana.com/reference). MIT licensed.
 
-> Status: **19 tools** (P0 MVP + custom-field attachment). Further convenience tools
-> (sort-by-due-date, bulk subtasks, portfolios, goals, webhooks) are planned for follow-up releases.
+> Status: **22 tools** (P0 MVP + custom-field & project-template management). Further convenience
+> tools (sort-by-due-date, bulk subtasks, portfolios, goals, webhooks) are planned for follow-ups.
 
 ## Tools
 
@@ -57,6 +57,20 @@ talking directly to the [Asana REST API](https://developers.asana.com/reference)
 | `list_workspace_custom_fields` | List a workspace's custom fields (gid/name/type); optional name filter. |
 | `add_custom_field_to_project` | Attach an existing custom field (e.g. "Estimated time") to a project. |
 | `remove_custom_field_from_project` | Detach a custom field from a project (values/field preserved). |
+
+### Project templates
+| Tool | What it does |
+|------|--------------|
+| `list_project_templates` | List templates (gid/name/team) for a team, or across all your teams. |
+| `get_project_template` | Template details incl. any `requested_dates` to supply on instantiate. |
+| `create_project_from_template` | Instantiate a new project from a template. |
+
+> **Why templates matter for time tracking.** Since the native Time tracking / Actual time field
+> can't be attached to a project via the API, the practical pattern is: enable Time tracking once
+> in a project *template* (in the UI), then create new projects from it with
+> `create_project_from_template` — the native column carries over. Editing a template's contents
+> is UI-only; because a template is a single shared object, edits are immediately used by everyone
+> who instantiates from it.
 
 ## Usage examples
 

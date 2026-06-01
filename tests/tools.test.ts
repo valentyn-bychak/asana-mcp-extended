@@ -39,11 +39,11 @@ afterEach(() => vi.unstubAllGlobals());
 // --- registry --------------------------------------------------------------
 
 describe("registry", () => {
-  it("exposes the 19 tools with unique names", () => {
+  it("exposes the 22 tools with unique names", () => {
     // 16 P0 tools (archive/unarchive and add/remove member split out) +
-    // 3 custom-field management tools.
-    expect(tools.length).toBe(19);
-    expect(new Set(tools.map((t) => t.name)).size).toBe(19);
+    // 3 custom-field tools + 3 project-template tools.
+    expect(tools.length).toBe(22);
+    expect(new Set(tools.map((t) => t.name)).size).toBe(22);
   });
 
   it("every tool has a non-trivial description", () => {
@@ -239,5 +239,42 @@ describe("tool handlers build correct requests", () => {
     });
     expect(captured.url).toContain("/workspaces/1203635502704309/custom_fields");
     expect(out).toEqual([{ gid: "1", name: "Estimated time", type: "number" }]);
+  });
+
+  it("create_project_from_template instantiates and returns the new project", async () => {
+    const calls: { url: string; method: string; body: unknown }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init: RequestInit) => {
+        calls.push({
+          url,
+          method: init.method!,
+          body: typeof init.body === "string" ? JSON.parse(init.body) : undefined,
+        });
+        // 1st call: instantiate → job with new_project inline
+        if (url.includes("/instantiateProject")) {
+          return new Response(
+            JSON.stringify({ data: { gid: "job1", new_project: { gid: "newP" }, status: "in_progress" } }),
+            { status: 200 },
+          );
+        }
+        // project fetch
+        return new Response(
+          JSON.stringify({ data: { name: "Weekly plan", permalink_url: "https://app.asana.com/x" } }),
+          { status: 200 },
+        );
+      }),
+    );
+    const out: any = await toolsByName.get("create_project_from_template")!.handler(client(), {
+      template_id: "TPL",
+      name: "Weekly plan",
+      team_id: "TEAM",
+    });
+    const inst = calls.find((c) => c.url.includes("/instantiateProject"))!;
+    expect(inst.method).toBe("POST");
+    expect(inst.url).toContain("/project_templates/TPL/instantiateProject");
+    expect(inst.body).toEqual({ data: { name: "Weekly plan", public: false, team: "TEAM" } });
+    expect(out.project_gid).toBe("newP");
+    expect(out.permalink_url).toBe("https://app.asana.com/x");
   });
 });
