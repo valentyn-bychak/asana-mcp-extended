@@ -5,8 +5,17 @@ import { projectTools } from "./tools/projects.js";
 import { timeTrackingTools } from "./tools/time_tracking.js";
 import { customFieldTools } from "./tools/custom_fields.js";
 import { templateTools } from "./tools/templates.js";
+import { recurrenceTools } from "./tools/recurrence.js";
+import { tagTools } from "./tools/tags.js";
+import { commentTools } from "./tools/comments.js";
+import { portfolioTools } from "./tools/portfolios.js";
+import { taskExtraTools } from "./tools/tasks_extra.js";
+import { projectExtraTools } from "./tools/project_extras.js";
+import { taskTemplateTools } from "./tools/task_templates.js";
+import { goalTools } from "./tools/goals.js";
+import { userTools } from "./tools/users.js";
 
-/** All tools exposed by the server (P0 + custom-field + template management). */
+/** All tools exposed by the server. */
 export const tools: ToolDef<any>[] = [
   ...attachmentTools,
   ...sectionTools,
@@ -14,6 +23,15 @@ export const tools: ToolDef<any>[] = [
   ...timeTrackingTools,
   ...customFieldTools,
   ...templateTools,
+  ...recurrenceTools,
+  ...tagTools,
+  ...commentTools,
+  ...portfolioTools,
+  ...taskExtraTools,
+  ...projectExtraTools,
+  ...taskTemplateTools,
+  ...goalTools,
+  ...userTools,
 ];
 
 export const toolsByName = new Map(tools.map((t) => [t.name, t]));

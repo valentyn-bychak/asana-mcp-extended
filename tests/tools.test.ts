@@ -39,11 +39,9 @@ afterEach(() => vi.unstubAllGlobals());
 // --- registry --------------------------------------------------------------
 
 describe("registry", () => {
-  it("exposes the 22 tools with unique names", () => {
-    // 16 P0 tools (archive/unarchive and add/remove member split out) +
-    // 3 custom-field tools + 3 project-template tools.
-    expect(tools.length).toBe(22);
-    expect(new Set(tools.map((t) => t.name)).size).toBe(22);
+  it("exposes 51 tools with unique names", () => {
+    expect(tools.length).toBe(51);
+    expect(new Set(tools.map((t) => t.name)).size).toBe(51);
   });
 
   it("every tool has a non-trivial description", () => {
@@ -276,5 +274,55 @@ describe("tool handlers build correct requests", () => {
     expect(inst.body).toEqual({ data: { name: "Weekly plan", public: false, team: "TEAM" } });
     expect(out.project_gid).toBe("newP");
     expect(out.permalink_url).toBe("https://app.asana.com/x");
+  });
+
+  it("set_task_recurrence uses periodically for freq+interval", async () => {
+    const { captured } = mockFetch({ gid: "T" });
+    await toolsByName.get("set_task_recurrence")!.handler(client(), {
+      task_id: "T", freq: "WEEKLY", interval: 2, due_on: "2026-06-02",
+    });
+    expect(captured.method).toBe("PUT");
+    expect((captured.body as any).data.recurrence).toEqual({
+      type: "periodically", data: JSON.stringify({ freq: "WEEKLY", interval: 2 }),
+    });
+    expect((captured.body as any).data.due_on).toBe("2026-06-02");
+  });
+
+  it("set_task_recurrence uses weekly type for weekdays", async () => {
+    const { captured } = mockFetch({ gid: "T" });
+    await toolsByName.get("set_task_recurrence")!.handler(client(), {
+      task_id: "T", weekdays: ["MON", "FRI"],
+    });
+    expect((captured.body as any).data.recurrence).toEqual({
+      type: "weekly", data: JSON.stringify({ weekday: ["MON", "FRI"] }),
+    });
+  });
+
+  it("set_task_recurrence requires freq or weekdays", () => {
+    const res = toolsByName.get("set_task_recurrence")!.schema.safeParse({ task_id: "T" });
+    expect(res.success).toBe(false);
+  });
+
+  it("create_tag defaults to the server workspace", async () => {
+    const { captured } = mockFetch({ gid: "tag1" });
+    await toolsByName.get("create_tag")!.handler(client(), { name: "x", color: "dark-green" });
+    expect(captured.url).toBe("https://app.asana.com/api/1.0/tags");
+    expect(captured.body).toEqual({ data: { name: "x", workspace: "1203635502704309", color: "dark-green" } });
+  });
+
+  it("set_task_dependencies clears existing then adds new", async () => {
+    const calls: { url: string; body: any }[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => {
+      calls.push({ url, body: typeof init.body === "string" ? JSON.parse(init.body) : undefined });
+      if (url.includes("/dependencies")) return new Response(JSON.stringify({ data: [{ gid: "old1" }] }), { status: 200 });
+      return new Response(JSON.stringify({ data: {} }), { status: 200 });
+    }));
+    await toolsByName.get("set_task_dependencies")!.handler(client(), {
+      task_id: "T", dependency_task_ids: ["new1", "new2"],
+    });
+    const removed = calls.find((c) => c.url.endsWith("/removeDependencies"));
+    const added = calls.find((c) => c.url.endsWith("/addDependencies"));
+    expect(removed!.body).toEqual({ data: { dependencies: ["old1"] } });
+    expect(added!.body).toEqual({ data: { dependencies: ["new1", "new2"] } });
   });
 });

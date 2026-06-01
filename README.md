@@ -8,8 +8,9 @@ manage members. This server adds those — the write-heavy half of a full projec
 Built from scratch in TypeScript on the official [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk),
 talking directly to the [Asana REST API](https://developers.asana.com/reference). MIT licensed.
 
-> Status: **22 tools** (P0 MVP + custom-field & project-template management). Further convenience
-> tools (sort-by-due-date, bulk subtasks, portfolios, goals, webhooks) are planned for follow-ups.
+> Status: **51 tools** covering the full TZ scope (attachments, sections, projects, time tracking,
+> custom fields, templates, recurrence, tags, comments, portfolios, subtasks/dependencies, goals,
+> task templates, user/overdue reports). Webhooks are intentionally excluded — see below.
 
 ## Tools
 
@@ -71,6 +72,75 @@ talking directly to the [Asana REST API](https://developers.asana.com/reference)
 > `create_project_from_template` — the native column carries over. Editing a template's contents
 > is UI-only; because a template is a single shared object, edits are immediately used by everyone
 > who instantiates from it.
+
+### Recurrence
+| Tool | What it does |
+|------|--------------|
+| `set_task_recurrence` | Make a task repeat: `freq`+`interval` (daily/weekly/monthly/yearly every N) or specific `weekdays`. Needs a due date. |
+
+### Tags
+| Tool | What it does |
+|------|--------------|
+| `create_tag` / `delete_tag` | Create/delete a workspace tag. |
+| `add_tag_to_task` / `remove_tag_from_task` | Tag/untag a task. |
+| `get_tasks_for_tag` | List tasks with a tag. |
+
+### Comments
+| Tool | What it does |
+|------|--------------|
+| `get_comments` | List a task's comment stories (system stories optional). |
+| `update_comment` / `delete_comment` | Edit/delete a comment you authored. |
+
+### Subtasks & dependencies
+| Tool | What it does |
+|------|--------------|
+| `bulk_create_subtasks` | Create many subtasks under a parent in one call. |
+| `set_task_dependencies` | Replace a task's dependencies with a given list (empty = clear). |
+
+### Project extras
+| Tool | What it does |
+|------|--------------|
+| `duplicate_project` | Duplicate a project (async job); returns the new project. |
+| `add_followers_to_project` | Add follower users to a project. |
+| `sort_section_tasks_by_due_date` | Reorder a section's tasks by due date (asc/desc, nulls top/bottom). |
+
+### Custom fields (creation)
+| Tool | What it does |
+|------|--------------|
+| `create_custom_field` | Create a workspace custom field (text/number/enum/multi_enum/date/people). |
+| `delete_custom_field` | Delete a workspace custom field (irreversible). |
+| `add_enum_option` | Add an option to an enum/multi_enum field. |
+
+### Portfolios
+| Tool | What it does |
+|------|--------------|
+| `create_portfolio` | Create a portfolio. |
+| `add_portfolio_item` / `remove_portfolio_item` | Add/remove a project in a portfolio. |
+
+### Task templates
+| Tool | What it does |
+|------|--------------|
+| `list_task_templates` | List a project's task templates. |
+| `instantiate_task_template` | Create a task from a task template. |
+
+### Goals
+| Tool | What it does |
+|------|--------------|
+| `list_goals` / `get_goal` | List/read goals. |
+| `create_goal` | Create a goal (auto-resolves the current time period if none given). |
+| `update_goal` | Update name/notes/owner/status/dates. |
+| `add_supporting_relationship` | Link a project/task/portfolio/sub-goal to a goal. |
+
+### Users & reports
+| Tool | What it does |
+|------|--------------|
+| `get_tasks_for_user` | A user's incomplete assigned tasks (`me` or gid). |
+| `overdue_tasks_for_user` | A user's past-due incomplete tasks. |
+
+### Not included: webhooks
+Webhooks require a public HTTPS endpoint to *receive* event callbacks. A local stdio MCP server
+has no such endpoint, so webhook tools would not function in this deployment and are omitted. (If
+ever deployed as a hosted HTTP server with a public URL, they could be added.)
 
 ## Usage examples
 

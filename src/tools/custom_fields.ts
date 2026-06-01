@@ -83,8 +83,84 @@ export const removeCustomFieldFromProject = defineTool({
   },
 });
 
+export const createCustomField = defineTool({
+  name: "create_custom_field",
+  description:
+    "Create a new custom field in a workspace. For enum/multi_enum pass enum_options. For number " +
+    "pass precision (decimal places). The field is created in the workspace's library; attach it " +
+    "to a project with add_custom_field_to_project.",
+  schema: z.object({
+    name: z.string(),
+    resource_subtype: z.enum(["text", "number", "enum", "multi_enum", "date", "people"]),
+    workspace_id: z.string().optional().describe("defaults to the server's workspace"),
+    precision: z.number().int().min(0).max(6).optional().describe("decimals for number fields (e.g. 0)"),
+    enum_options: z
+      .array(z.object({ name: z.string(), color: z.string().optional() }))
+      .optional()
+      .describe("options for enum/multi_enum fields"),
+  }),
+  handler: (client, input) => {
+    const ws = input.workspace_id ?? client.defaultWorkspace;
+    if (!ws) throw new Error("workspace_id required (no default workspace)");
+    return client.request(
+      "POST",
+      "/custom_fields",
+      compactCF({
+        workspace: ws,
+        name: input.name,
+        resource_subtype: input.resource_subtype,
+        type: input.resource_subtype,
+        precision: input.resource_subtype === "number" ? input.precision ?? 0 : undefined,
+        enum_options: input.enum_options,
+      }),
+    );
+  },
+});
+
+export const deleteCustomField = defineTool({
+  name: "delete_custom_field",
+  description:
+    "Delete a custom field from the workspace entirely (removes it and its values from ALL " +
+    "projects/tasks). Irreversible — use with care.",
+  schema: z.object({ custom_field_id: z.string() }),
+  handler: async (client, input) => {
+    await client.request("DELETE", `/custom_fields/${input.custom_field_id}`);
+    return { deleted: true, custom_field_id: input.custom_field_id };
+  },
+});
+
+export const addEnumOption = defineTool({
+  name: "add_enum_option",
+  description: "Add a new option to an existing enum/multi_enum custom field.",
+  schema: z.object({
+    custom_field_id: z.string(),
+    name: z.string(),
+    color: z.string().optional(),
+    insert_before: z.string().optional().describe("gid of the option to insert before"),
+    insert_after: z.string().optional().describe("gid of the option to insert after"),
+  }),
+  handler: (client, input) =>
+    client.request(
+      "POST",
+      `/custom_fields/${input.custom_field_id}/enum_options`,
+      compactCF({
+        name: input.name,
+        color: input.color,
+        insert_before: input.insert_before,
+        insert_after: input.insert_after,
+      }),
+    ),
+});
+
+function compactCF(obj: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+}
+
 export const customFieldTools = [
   listWorkspaceCustomFields,
   addCustomFieldToProject,
   removeCustomFieldFromProject,
+  createCustomField,
+  deleteCustomField,
+  addEnumOption,
 ];
