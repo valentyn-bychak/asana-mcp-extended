@@ -77,7 +77,10 @@ export const addProjectMember = defineTool({
 
 export const removeProjectMember = defineTool({
   name: "remove_project_member",
-  description: "Remove one or more members (users) from a project.",
+  description:
+    "Remove one or more members (users) from a project. WARNING: removing yourself " +
+    "(the current token's user) revokes your own access to the project — you will no " +
+    "longer be able to read or modify it.",
   schema: z.object({
     project_id: z.string(),
     user_ids: z.array(z.string()).min(1).describe("gids of users to remove"),
