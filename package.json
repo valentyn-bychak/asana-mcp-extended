@@ -1,0 +1,36 @@
+{
+  "name": "asana-mcp-extended",
+  "version": "0.1.0",
+  "description": "Extended Asana MCP server — full project/task management cycle (attachments, sections, reorder, project update, time tracking, members) the hosted Asana MCP lacks.",
+  "license": "MIT",
+  "author": "Valentyn Bychak",
+  "type": "module",
+  "bin": {
+    "asana-mcp-extended": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
