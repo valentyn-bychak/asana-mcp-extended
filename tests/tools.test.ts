@@ -39,11 +39,11 @@ afterEach(() => vi.unstubAllGlobals());
 // --- registry --------------------------------------------------------------
 
 describe("registry", () => {
-  it("exposes the 16 P0 tools with unique names", () => {
-    // TZ groups archive/unarchive (4.8) and add/remove member (4.13) as single
-    // entries; we split each into its own tool → 16 distinct tools.
-    expect(tools.length).toBe(16);
-    expect(new Set(tools.map((t) => t.name)).size).toBe(16);
+  it("exposes the 19 tools with unique names", () => {
+    // 16 P0 tools (archive/unarchive and add/remove member split out) +
+    // 3 custom-field management tools.
+    expect(tools.length).toBe(19);
+    expect(new Set(tools.map((t) => t.name)).size).toBe(19);
   });
 
   it("every tool has a non-trivial description", () => {
@@ -215,5 +215,29 @@ describe("tool handlers build correct requests", () => {
       entry_id: "E",
     });
     expect(res.success).toBe(false);
+  });
+
+  it("add_custom_field_to_project posts addCustomFieldSetting with is_important default", async () => {
+    const { captured } = mockFetch({ gid: "cfs1" });
+    await toolsByName.get("add_custom_field_to_project")!.handler(client(), {
+      project_id: "P",
+      custom_field_id: "1205533106065244",
+    });
+    expect(captured.url).toContain("/projects/P/addCustomFieldSetting");
+    expect(captured.body).toEqual({
+      data: { custom_field: "1205533106065244", is_important: true },
+    });
+  });
+
+  it("list_workspace_custom_fields uses default workspace and filters by name", async () => {
+    const { captured } = mockFetch([
+      { gid: "1", name: "Estimated time", type: "number" },
+      { gid: "2", name: "Priority", type: "enum" },
+    ]);
+    const out = await toolsByName.get("list_workspace_custom_fields")!.handler(client(), {
+      name_contains: "estimat",
+    });
+    expect(captured.url).toContain("/workspaces/1203635502704309/custom_fields");
+    expect(out).toEqual([{ gid: "1", name: "Estimated time", type: "number" }]);
   });
 });

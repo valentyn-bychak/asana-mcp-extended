@@ -8,8 +8,8 @@ manage members. This server adds those — the write-heavy half of a full projec
 Built from scratch in TypeScript on the official [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk),
 talking directly to the [Asana REST API](https://developers.asana.com/reference). MIT licensed.
 
-> Status: **P0 MVP** — 16 tools. Convenience tools (sort-by-due-date, bulk subtasks, portfolios,
-> goals, custom fields, webhooks) are planned for follow-up releases.
+> Status: **19 tools** (P0 MVP + custom-field attachment). Further convenience tools
+> (sort-by-due-date, bulk subtasks, portfolios, goals, webhooks) are planned for follow-up releases.
 
 ## Tools
 
@@ -38,10 +38,22 @@ talking directly to the [Asana REST API](https://developers.asana.com/reference)
 ### Time Tracking (requires Asana Advanced+)
 | Tool | What it does |
 |------|--------------|
-| `add_time_tracking_entry` | Log actual time (`duration_minutes`) on a task. |
+| `add_time_tracking_entry` | Log actual time (`duration_minutes`) on a task → task's native `actual_time_minutes`. |
 | `get_time_tracking_entries` | List a task's time entries. |
 | `update_time_tracking_entry` | Edit an entry's duration/date. |
 | `delete_time_tracking_entry` | Delete an entry. |
+
+> **Estimated time / custom time fields.** Asana's *native* Estimated time is not writable via the
+> public API. Many workspaces instead track Estimated/Spent time as **number custom fields**. Set
+> their values via the standard task `custom_fields` API; attach the fields to a project with the
+> tools below (a freshly created project does not carry them automatically).
+
+### Custom fields
+| Tool | What it does |
+|------|--------------|
+| `list_workspace_custom_fields` | List a workspace's custom fields (gid/name/type); optional name filter. |
+| `add_custom_field_to_project` | Attach an existing custom field (e.g. "Estimated time") to a project. |
+| `remove_custom_field_from_project` | Detach a custom field from a project (values/field preserved). |
 
 ## Usage examples
 
