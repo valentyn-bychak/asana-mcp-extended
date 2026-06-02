@@ -16,6 +16,8 @@ import { goalTools } from "./tools/goals.js";
 import { userTools } from "./tools/users.js";
 import { reportTools } from "./tools/reports.js";
 import { myTasksTools } from "./tools/my_tasks.js";
+import { coreReadTools } from "./tools/core_read.js";
+import { coreWriteTools } from "./tools/core_write.js";
 
 /** All tools exposed by the server. */
 export const tools: ToolDef<any>[] = [
@@ -36,6 +38,8 @@ export const tools: ToolDef<any>[] = [
   ...userTools,
   ...reportTools,
   ...myTasksTools,
+  ...coreReadTools,
+  ...coreWriteTools,
 ];
 
 export const toolsByName = new Map(tools.map((t) => [t.name, t]));

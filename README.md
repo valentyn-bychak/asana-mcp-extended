@@ -8,11 +8,33 @@ manage members. This server adds those — the write-heavy half of a full projec
 Built from scratch in TypeScript on the official [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk),
 talking directly to the [Asana REST API](https://developers.asana.com/reference). MIT licensed.
 
-> Status: **58 tools** covering the full TZ scope plus stand-up/weekly reports, My Tasks sections,
-> and full custom-field editing. Webhooks and reporting-dashboard creation are intentionally
-> excluded (Asana API limitations) — see below.
+> Status: **79 tools** — fully self-contained. Includes core read/search + task CRUD (so you do
+> NOT need the hosted Asana plugin alongside it) plus the full write-heavy TZ scope, stand-up/weekly
+> reports, templates, recurrence, time tracking, goals, and more. Webhooks and reporting-dashboard
+> creation are intentionally excluded (Asana API limitations) — see below.
 
 ## Tools
+
+### Core: read, search & task CRUD
+These make the server self-contained — no separate Asana plugin needed.
+| Tool | What it does |
+|------|--------------|
+| `get_me` | Current user + their workspaces (with gids — use to find your workspace gid). |
+| `get_users` / `get_user` | List workspace users / one user. |
+| `get_teams` | Teams you belong to. |
+| `get_projects` / `get_project` | List projects / one project (optionally with sections). |
+| `get_sections` | A project's sections in order. |
+| `get_task` / `get_tasks` | One task / tasks by project, section, tag, or assignee. |
+| `search_tasks` | Workspace search: text + assignee/project/completed/due-window filters. |
+| `get_my_tasks` | A user's My Tasks (incomplete by default). |
+| `get_attachments` | List a task's attachments. |
+| `get_portfolios` / `get_portfolio_items` | List portfolios / a portfolio's items. |
+| `create_project` | Create a project from scratch (prefer `create_project_from_template`). |
+| `create_tasks` | Create one or many tasks (project/section, assignee, dates, custom fields, subtasks). |
+| `update_task` | Update name/notes/assignee/dates/completed/custom fields. |
+| `add_task_to_project` / `remove_task_from_project` | Multi-home a task in/out of a project + section. |
+| `add_comment` | Comment on a task (text or html). |
+| `delete_task` | Delete a task. |
 
 ### Attachments
 | Tool | What it does |
@@ -191,8 +213,11 @@ Create an Asana **Personal Access Token** at <https://app.asana.com/0/my-apps>, 
 
 ```
 ASANA_PERSONAL_ACCESS_TOKEN=...
-ASANA_WORKSPACE_GID=1203635502704309
+ASANA_WORKSPACE_GID=...
 ```
+
+Find your workspace gid by running the `get_me` tool once it's connected (it lists your
+workspaces with their gids), or copy it from any Asana URL: `app.asana.com/0/<WORKSPACE_GID>/...`.
 
 ## Connecting to Claude / Cowork
 
@@ -206,16 +231,16 @@ Add a custom **stdio** MCP server pointing at the built entrypoint, passing the 
       "args": ["/Users/valentine/Code/asana-mcp-extended/dist/index.js"],
       "env": {
         "ASANA_PERSONAL_ACCESS_TOKEN": "your_token_here",
-        "ASANA_WORKSPACE_GID": "1203635502704309"
+        "ASANA_WORKSPACE_GID": "your_workspace_gid_here"
       }
     }
   }
 }
 ```
 
-In **Cowork**: Settings → Plugins → Add Custom MCP → use the command/args/env above. The new tools
-appear under this server's own prefix; the hosted Asana plugin can stay enabled for reads or be
-disabled to avoid duplicate tools.
+In **Cowork**: Settings → Plugins → Add Custom MCP → use the command/args/env above. This server is
+self-contained (read + search + create/update + all the write-heavy tools), so you do **not** need
+the hosted Asana plugin alongside it.
 
 Set `DEBUG=asana-mcp` to log requests to stderr.
 

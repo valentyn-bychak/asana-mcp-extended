@@ -31,7 +31,7 @@ function mockFetch(responseData: unknown, status = 200): { captured: Captured } 
 }
 
 function client() {
-  return new AsanaClient({ token: "test-token", workspaceGid: "1203635502704309" });
+  return new AsanaClient({ token: "test-token", workspaceGid: "1199999999999999" });
 }
 
 afterEach(() => vi.unstubAllGlobals());
@@ -39,9 +39,9 @@ afterEach(() => vi.unstubAllGlobals());
 // --- registry --------------------------------------------------------------
 
 describe("registry", () => {
-  it("exposes 58 tools with unique names", () => {
-    expect(tools.length).toBe(58);
-    expect(new Set(tools.map((t) => t.name)).size).toBe(58);
+  it("exposes 79 tools with unique names", () => {
+    expect(tools.length).toBe(79);
+    expect(new Set(tools.map((t) => t.name)).size).toBe(79);
   });
 
   it("every tool has a non-trivial description", () => {
@@ -235,7 +235,7 @@ describe("tool handlers build correct requests", () => {
     const out = await toolsByName.get("list_workspace_custom_fields")!.handler(client(), {
       name_contains: "estimat",
     });
-    expect(captured.url).toContain("/workspaces/1203635502704309/custom_fields");
+    expect(captured.url).toContain("/workspaces/1199999999999999/custom_fields");
     expect(out).toEqual([{ gid: "1", name: "Estimated time", type: "number" }]);
   });
 
@@ -307,7 +307,7 @@ describe("tool handlers build correct requests", () => {
     const { captured } = mockFetch({ gid: "tag1" });
     await toolsByName.get("create_tag")!.handler(client(), { name: "x", color: "dark-green" });
     expect(captured.url).toBe("https://app.asana.com/api/1.0/tags");
-    expect(captured.body).toEqual({ data: { name: "x", workspace: "1203635502704309", color: "dark-green" } });
+    expect(captured.body).toEqual({ data: { name: "x", workspace: "1199999999999999", color: "dark-green" } });
   });
 
   it("set_task_dependencies clears existing then adds new", async () => {
