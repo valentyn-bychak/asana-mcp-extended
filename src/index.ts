@@ -19,11 +19,28 @@ const server = new Server(
   { capabilities: { tools: {} } },
 );
 
+// Sanitize draft-04-style booleans (exclusiveMinimum/Maximum: true, emitted by the
+// openApi3 target) into draft-2020-12-compliant numbers, which the Anthropic API requires.
+function fixSchema(s: any): any {
+  if (s && typeof s === "object") {
+    if (s.exclusiveMinimum === true) {
+      if (typeof s.minimum === "number") { s.exclusiveMinimum = s.minimum; delete s.minimum; }
+      else { delete s.exclusiveMinimum; }
+    }
+    if (s.exclusiveMaximum === true) {
+      if (typeof s.maximum === "number") { s.exclusiveMaximum = s.maximum; delete s.maximum; }
+      else { delete s.exclusiveMaximum; }
+    }
+    for (const k of Object.keys(s)) fixSchema(s[k]);
+  }
+  return s;
+}
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: tools.map((t) => ({
     name: t.name,
     description: t.description,
-    inputSchema: zodToJsonSchema(t.schema, { target: "openApi3" }) as Record<string, unknown>,
+    inputSchema: fixSchema(zodToJsonSchema(t.schema, { target: "openApi3" })) as Record<string, unknown>,
   })),
 }));
 
