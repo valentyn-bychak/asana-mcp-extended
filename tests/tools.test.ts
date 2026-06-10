@@ -144,6 +144,47 @@ describe("tool handlers build correct requests", () => {
     expect(res.success).toBe(false);
   });
 
+  it("create_tasks with section_id creates in project then moves into section", async () => {
+    // Regression: Asana rejects `memberships` on POST /tasks ("specify one of
+    // workspace, parent, projects"), so section placement must be a 2nd call.
+    const calls: Captured[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init: RequestInit) => {
+        calls.push({
+          url,
+          method: init.method!,
+          headers: init.headers as Record<string, string>,
+          body: typeof init.body === "string" ? JSON.parse(init.body) : init.body,
+        });
+        return new Response(JSON.stringify({ data: { gid: "NEW", name: "T" } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }),
+    );
+    await toolsByName.get("create_tasks")!.handler(client(), {
+      tasks: [{ name: "T", project_id: "P", section_id: "S" }],
+    });
+    expect(calls).toHaveLength(2);
+    // 1) create in project — NO memberships (that's what Asana rejected)
+    expect(calls[0].url).toContain("https://app.asana.com/api/1.0/tasks?");
+    expect((calls[0].body as any).data.projects).toEqual(["P"]);
+    expect((calls[0].body as any).data.memberships).toBeUndefined();
+    // 2) move the created task into the section
+    expect(calls[1].url).toBe("https://app.asana.com/api/1.0/tasks/NEW/addProject");
+    expect((calls[1].body as any).data).toEqual({ project: "P", section: "S" });
+  });
+
+  it("create_tasks without section_id makes a single create call", async () => {
+    const { captured } = mockFetch({ gid: "NEW", name: "T" });
+    await toolsByName.get("create_tasks")!.handler(client(), {
+      tasks: [{ name: "T", project_id: "P" }],
+    });
+    expect(captured.url).toContain("https://app.asana.com/api/1.0/tasks?");
+    expect((captured.body as any).data.projects).toEqual(["P"]);
+  });
+
   it("update_project drops undefined fields and keeps provided ones", async () => {
     const { captured } = mockFetch({ gid: "P" });
     await toolsByName.get("update_project")!.handler(client(), {

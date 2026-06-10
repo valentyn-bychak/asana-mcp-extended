@@ -73,14 +73,24 @@ export const createTasks = defineTool({
         custom_fields: t.custom_fields,
       });
       // Placement: a task needs a project/parent/workspace home.
-      if (t.section_id && t.project_id) {
-        body.memberships = [{ project: t.project_id, section: t.section_id }];
-      } else if (t.project_id) {
+      // NOTE: Asana's POST /tasks rejects `memberships` ("specify one of workspace,
+      // parent, projects") — it can't place a task into a section at creation time.
+      // So we create the task in the project, then move it into the section with a
+      // second addProject call (the same path add_task_to_project uses).
+      let pendingSection: string | undefined;
+      if (t.project_id) {
         body.projects = [t.project_id];
+        if (t.section_id) pendingSection = t.section_id;
       } else if (!t.parent_id) {
         body.workspace = t.workspace_id ?? client.defaultWorkspace;
       }
       const r = await client.request<any>("POST", "/tasks", body, { opt_fields: "name,permalink_url" });
+      if (pendingSection) {
+        await client.request("POST", `/tasks/${r.gid}/addProject`, {
+          project: t.project_id,
+          section: pendingSection,
+        });
+      }
       created.push({ gid: r.gid, name: r.name, permalink_url: r.permalink_url });
     }
     return { created_count: created.length, tasks: created };
